@@ -1,21 +1,30 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 
-const globalForPrisma = globalThis;
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClient | undefined;
+};
 
 const prisma =
-  globalForPrisma.prisma ||
-  new PrismaClient();
+  globalForPrisma.prisma ?? new PrismaClient();
 
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;
 }
 
+type RouteContext = {
+  params: Promise<{
+    id: string;
+  }>;
+};
+
 // GET /api/products/:id
-export async function GET(request, { params }) {
+export async function GET(
+  request: NextRequest,
+  { params }: RouteContext
+) {
   try {
     const { id } = await params;
-
     const productId = Number(id);
 
     if (!Number.isInteger(productId)) {
@@ -58,10 +67,12 @@ export async function GET(request, { params }) {
 }
 
 // PUT /api/products/:id
-export async function PUT(request, { params }) {
+export async function PUT(
+  request: NextRequest,
+  { params }: RouteContext
+) {
   try {
     const { id } = await params;
-
     const productId = Number(id);
 
     if (!Number.isInteger(productId)) {
@@ -82,7 +93,12 @@ export async function PUT(request, { params }) {
       description,
     } = body;
 
-    if (!name || !category || price === undefined || !image) {
+    if (
+      !name ||
+      !category ||
+      price === undefined ||
+      !image
+    ) {
       return NextResponse.json(
         {
           message:
@@ -106,9 +122,11 @@ export async function PUT(request, { params }) {
             ? 0
             : Number(rating),
         description:
-          description
-            ? String(description).trim()
-            : null,
+          description === null ||
+          description === undefined ||
+          String(description).trim() === ""
+            ? null
+            : String(description).trim(),
       },
     });
 
@@ -136,10 +154,12 @@ export async function PUT(request, { params }) {
 }
 
 // DELETE /api/products/:id
-export async function DELETE(request, { params }) {
+export async function DELETE(
+  request: NextRequest,
+  { params }: RouteContext
+) {
   try {
     const { id } = await params;
-
     const productId = Number(id);
 
     if (!Number.isInteger(productId)) {
