@@ -13,18 +13,36 @@ import {
   Package,
   ChevronDown,
 } from "lucide-react";
+type OrderItem = {
+  id: string;
+  quantity: number;
+  price: number;
+  product?: {
+    name: string;
+    image?: string;
+  };
+};
 
+type Order = {
+  id: string;
+  customerName: string;
+  phone: string;
+  status: string;
+  total: number;
+  createdAt: string;
+  items: OrderItem[];
+};
 export default function AdminOrdersPage() {
-  const [orders, setOrders] = useState([]);
+const [orders, setOrders] = useState<Order[]>([]);
+const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+const [deleting, setDeleting] = useState<string | null>(null);
+const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const [selectedOrder, setSelectedOrder] = useState(null);
-  const [deleting, setDeleting] = useState(null);
-  const [updatingStatus, setUpdatingStatus] = useState(null);
 
   // =========================================
   // FETCH ORDERS
@@ -119,7 +137,7 @@ export default function AdminOrdersPage() {
   // UPDATE STATUS
   // =========================================
 
-  async function updateStatus(orderId, newStatus) {
+async function updateStatus(orderId: string, newStatus: string)  {
     try {
       setUpdatingStatus(orderId);
       setError("");
@@ -179,7 +197,7 @@ export default function AdminOrdersPage() {
   // DELETE ORDER
   // =========================================
 
-  async function deleteOrder(orderId) {
+async function deleteOrder(orderId: string) {
     const confirmed = window.confirm(
       "Are you sure you want to delete this order?"
     );
@@ -225,7 +243,7 @@ export default function AdminOrdersPage() {
   // FORMAT PRICE
   // =========================================
 
-  function formatPrice(price) {
+function formatPrice(price: number)  {
     return Number(price || 0).toLocaleString("en-PK");
   }
 
@@ -233,7 +251,7 @@ export default function AdminOrdersPage() {
   // FORMAT DATE
   // =========================================
 
-  function formatDate(date) {
+function formatDate(date: string) {
     if (!date) return "—";
 
     return new Date(date).toLocaleDateString(
@@ -250,7 +268,7 @@ export default function AdminOrdersPage() {
   // STATUS STYLE
   // =========================================
 
-  function getStatusClass(status) {
+ function getStatusClass(status: string) {
     switch (status) {
       case "PENDING":
         return "bg-yellow-100 text-yellow-800";

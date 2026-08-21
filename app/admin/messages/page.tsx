@@ -19,15 +19,24 @@ import {
 
 export default function AdminMessagesPage() {
   const router = useRouter();
-
-  const [messages, setMessages] = useState([]);
+type Message = {
+  id: string;
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  createdAt: string;
+};
+const [messages, setMessages] = useState<Message[]>([]);
+const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
+const [deleting, setDeleting] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
-  const [selectedMessage, setSelectedMessage] = useState(null);
+
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [deleting, setDeleting] = useState(null);
+
 
   // =========================================================
   // LOAD MESSAGES FROM DATABASE
@@ -69,7 +78,7 @@ export default function AdminMessagesPage() {
   // DELETE MESSAGE
   // =========================================================
 
-  async function deleteMessage(id) {
+    async function deleteMessage(id: string) {
     const confirmed = window.confirm(
       "Are you sure you want to delete this message?"
     );
@@ -169,7 +178,7 @@ export default function AdminMessagesPage() {
   // DATE FORMAT
   // =========================================================
 
-  function formatDate(date) {
+  function formatDate(date: string) {
     if (!date) return "Unknown";
 
     return new Date(date).toLocaleDateString("en-US", {
@@ -179,7 +188,7 @@ export default function AdminMessagesPage() {
     });
   }
 
-  function formatDateTime(date) {
+ function formatDateTime(date: string) {
     if (!date) return "Unknown";
 
     return new Date(date).toLocaleString("en-US", {

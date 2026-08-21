@@ -12,7 +12,26 @@ import {
   Image as ImageIcon,
 } from "lucide-react";
 
-const emptyForm = {
+type Product = {
+  id: string;
+  name: string;
+  category: string;
+  price: number;
+  image: string;
+  rating: number;
+  description: string | null;
+};
+
+type ProductForm = {
+  name: string;
+  category: string;
+  price: string;
+  image: string;
+  rating: string;
+  description: string;
+};
+
+const emptyForm: ProductForm = {
   name: "",
   category: "",
   price: "",
@@ -22,15 +41,21 @@ const emptyForm = {
 };
 
 export default function AdminProductsPage() {
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("all");
+
   const [showForm, setShowForm] = useState(false);
-  const [editingProduct, setEditingProduct] = useState(null);
-  const [form, setForm] = useState(emptyForm);
+  const [editingProduct, setEditingProduct] =
+    useState<Product | null>(null);
+
+  const [form, setForm] = useState<ProductForm>({
+    ...emptyForm,
+  });
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [deleting, setDeleting] = useState(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
   const [error, setError] = useState("");
 
   // =========================
@@ -56,7 +81,11 @@ export default function AdminProductsPage() {
         );
       }
 
-      setProducts(data.products || data || []);
+      const productList = Array.isArray(data)
+        ? data
+        : data.products || [];
+
+      setProducts(productList);
     } catch (err) {
       setError(
         err instanceof Error
@@ -93,9 +122,9 @@ export default function AdminProductsPage() {
   // =========================
 
   const filteredProducts = useMemo(() => {
-    return products.filter((product) => {
-      const searchValue = search.toLowerCase();
+    const searchValue = search.toLowerCase().trim();
 
+    return products.filter((product) => {
       const matchesSearch =
         product.name
           ?.toLowerCase()
@@ -127,7 +156,7 @@ export default function AdminProductsPage() {
   // OPEN EDIT FORM
   // =========================
 
-  function openEditForm(product) {
+  function openEditForm(product: Product) {
     setEditingProduct(product);
 
     setForm({
@@ -166,7 +195,11 @@ export default function AdminProductsPage() {
   // HANDLE NORMAL INPUT
   // =========================
 
-  function handleChange(event) {
+  function handleChange(
+    event: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement
+    >
+  ) {
     const { name, value } = event.target;
 
     setForm((previous) => ({
@@ -179,18 +212,17 @@ export default function AdminProductsPage() {
   // HANDLE PRICE
   // =========================
 
-  function handlePriceChange(event) {
+  function handlePriceChange(
+    event: React.ChangeEvent<HTMLInputElement>
+  ) {
     const value = event.target.value;
 
-    /*
-      Allows:
-      2500
-      2500.5
-      2500.50
-      0.99
-
-      Maximum 2 decimal places.
-    */
+    // Allows:
+    // 2500
+    // 2500.5
+    // 2500.50
+    // 0.99
+    // Maximum 2 decimal places
 
     if (
       value === "" ||
@@ -207,10 +239,11 @@ export default function AdminProductsPage() {
   // HANDLE RATING
   // =========================
 
-  function handleRatingChange(event) {
+  function handleRatingChange(
+    event: React.ChangeEvent<HTMLInputElement>
+  ) {
     const value = event.target.value;
 
-    // Allow empty input
     if (value === "") {
       setForm((previous) => ({
         ...previous,
@@ -220,14 +253,13 @@ export default function AdminProductsPage() {
       return;
     }
 
-    // Only numbers with maximum one decimal
+    // Maximum one decimal place
     if (!/^\d*\.?\d?$/.test(value)) {
       return;
     }
 
     const numberValue = Number(value);
 
-    // Rating cannot exceed 5
     if (numberValue > 5) {
       return;
     }
@@ -242,9 +274,10 @@ export default function AdminProductsPage() {
   // CREATE / UPDATE
   // =========================
 
-  async function handleSubmit(event) {
+  async function handleSubmit(
+    event: React.FormEvent<HTMLFormElement>
+  ) {
     event.preventDefault();
-
     setError("");
 
     // PRODUCT NAME
@@ -267,10 +300,7 @@ export default function AdminProductsPage() {
 
     const price = Number(form.price);
 
-    if (
-      !Number.isFinite(price) ||
-      price < 0
-    ) {
+    if (!Number.isFinite(price) || price < 0) {
       setError("Please enter a valid price.");
       return;
     }
@@ -302,9 +332,9 @@ export default function AdminProductsPage() {
       const payload = {
         name: form.name.trim(),
         category: form.category.trim(),
-        price: price,
+        price,
         image: form.image.trim(),
-        rating: rating,
+        rating,
         description:
           form.description.trim() || null,
       };
@@ -313,9 +343,7 @@ export default function AdminProductsPage() {
         ? `/api/products/${editingProduct.id}`
         : "/api/products";
 
-      const method = editingProduct
-        ? "PUT"
-        : "POST";
+      const method = editingProduct ? "PUT" : "POST";
 
       const response = await fetch(url, {
         method,
@@ -336,7 +364,6 @@ export default function AdminProductsPage() {
       }
 
       closeForm();
-
       await fetchProducts();
     } catch (err) {
       setError(
@@ -353,7 +380,7 @@ export default function AdminProductsPage() {
   // DELETE PRODUCT
   // =========================
 
-  async function deleteProduct(id) {
+  async function deleteProduct(id: string) {
     const confirmed = window.confirm(
       "Are you sure you want to delete this product?"
     );
@@ -401,9 +428,7 @@ export default function AdminProductsPage() {
 
   return (
     <main className="min-h-screen bg-[#F7F3EC] text-[#211F1C]">
-      {/* =========================
-          HEADER
-      ========================= */}
+      {/* HEADER */}
 
       <header className="border-b border-[#211F1C]/10">
         <div className="mx-auto max-w-7xl px-5 py-6 sm:px-6 lg:px-10">
@@ -425,6 +450,7 @@ export default function AdminProductsPage() {
             </div>
 
             <button
+              type="button"
               onClick={openAddForm}
               className="flex w-full items-center justify-center gap-2 rounded-full bg-[#211F1C] px-5 py-3 text-[8px] font-black uppercase tracking-[0.2em] text-[#F7F3EC] transition hover:-translate-y-0.5 sm:w-auto"
             >
@@ -435,9 +461,7 @@ export default function AdminProductsPage() {
         </div>
       </header>
 
-      {/* =========================
-          CONTENT
-      ========================= */}
+      {/* CONTENT */}
 
       <section className="mx-auto max-w-7xl px-5 py-7 sm:px-6 lg:px-10">
         {/* STATS */}
@@ -478,9 +502,7 @@ export default function AdminProductsPage() {
           </div>
         </div>
 
-        {/* =========================
-            SEARCH + FILTER
-        ========================= */}
+        {/* SEARCH + FILTER */}
 
         <div className="mt-7 flex flex-col gap-3 sm:flex-row">
           <div className="relative flex-1">
@@ -523,9 +545,7 @@ export default function AdminProductsPage() {
           </div>
         )}
 
-        {/* =========================
-            PRODUCTS
-        ========================= */}
+        {/* PRODUCTS */}
 
         <div className="mt-7">
           {loading ? (
@@ -547,6 +567,7 @@ export default function AdminProductsPage() {
               </p>
 
               <button
+                type="button"
                 onClick={openAddForm}
                 className="mt-5 rounded-full bg-[#211F1C] px-5 py-3 text-[8px] font-black uppercase tracking-[0.2em] text-[#F7F3EC]"
               >
@@ -605,6 +626,7 @@ export default function AdminProductsPage() {
 
                     <div className="mt-4 grid grid-cols-2 gap-2">
                       <button
+                        type="button"
                         onClick={() =>
                           openEditForm(product)
                         }
@@ -615,6 +637,7 @@ export default function AdminProductsPage() {
                       </button>
 
                       <button
+                        type="button"
                         onClick={() =>
                           deleteProduct(product.id)
                         }
@@ -638,9 +661,7 @@ export default function AdminProductsPage() {
         </div>
       </section>
 
-      {/* =========================
-          ADD / EDIT MODAL
-      ========================= */}
+      {/* ADD / EDIT MODAL */}
 
       {showForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#211F1C]/50 p-4 backdrop-blur-sm">
@@ -661,6 +682,7 @@ export default function AdminProductsPage() {
               </div>
 
               <button
+                type="button"
                 onClick={closeForm}
                 className="flex h-9 w-9 items-center justify-center rounded-full border border-[#211F1C]/10 transition hover:bg-[#211F1C] hover:text-[#F7F3EC]"
               >
