@@ -1,12 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+
+const connectionString = process.env.DATABASE_URL;
+
+if (!connectionString) {
+  throw new Error("DATABASE_URL is missing");
+}
+
+const adapter = new PrismaPg({
+  connectionString,
+});
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
 const prisma =
-  globalForPrisma.prisma ?? new PrismaClient();
+  globalForPrisma.prisma ??
+  new PrismaClient({
+    adapter,
+  });
 
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;
@@ -117,10 +131,12 @@ export async function PUT(
         category: String(category).trim(),
         price: Number(price),
         image: String(image).trim(),
+
         rating:
           rating === undefined || rating === ""
             ? 0
             : Number(rating),
+
         description:
           description === null ||
           description === undefined ||
